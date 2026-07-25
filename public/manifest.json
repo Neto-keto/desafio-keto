@@ -1,0 +1,12 @@
+{
+  "name": "Desafio Keto",
+  "short_name": "Desafio Keto",
+  "description": "Registre suas refeições e acompanhe sua pontuação na dieta cetogênica.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#14130F",
+  "theme_color": "#14130F",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
