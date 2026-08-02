@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Camera, Flame, Trophy, RotateCcw, Loader2 } from "lucide-react";
+import { Camera, Flame, Trophy, RotateCcw, Loader2, BookOpen, ChevronDown } from "lucide-react";
 
 const C = {
   bg: "#14130F",
@@ -191,7 +191,6 @@ function MealCard({ slot, entry, onCapture, busy }) {
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         style={{ display: "none" }}
         onChange={(e) => {
           const file = e.target.files[0];
@@ -199,6 +198,118 @@ function MealCard({ slot, entry, onCapture, busy }) {
           e.target.value = "";
         }}
       />
+    </div>
+  );
+}
+
+const GUIDE_SECTIONS = [
+  {
+    title: "O que é a dieta cetogênica",
+    body:
+      "É uma dieta com pouquíssimo carboidrato e rica em gorduras boas. Com o carboidrato quase zerado, o corpo esgota suas reservas de glicose e passa a produzir cetonas a partir da gordura, usando-as como principal fonte de energia. Esse estado se chama cetose — daí o nome \"keto\".",
+  },
+  {
+    title: "Como fica a divisão de macros",
+    body:
+      "Na versão clássica: cerca de 70-75% das calorias vêm de gorduras, 20-25% de proteínas e só 5-10% de carboidratos — normalmente até 20-50g de carboidrato líquido por dia (carboidrato líquido = carboidrato total menos fibras). É uma proporção bem diferente da dieta comum, então costuma exigir planejamento nas primeiras semanas.",
+  },
+  {
+    title: "Alimentos liberados",
+    body:
+      "Carnes em geral (boi, porco, aves), peixes e frutos do mar, ovos, queijos gordos, manteiga e ghee, azeite e óleo de coco, abacate, oleaginosas (castanhas, nozes, amêndoas), vegetais folhosos e de baixo carboidrato (couve, espinafre, brócolis, couve-flor, abobrinha, pepino) e temperos naturais.",
+  },
+  {
+    title: "Alimentos para evitar",
+    body:
+      "Pães, massas, arroz e farinhas em geral; açúcar e doces; refrigerantes e sucos industrializados; tubérculos ricos em amido (batata, mandioca, batata-doce) em quantidade; leguminosas (feijão, lentilha, grão-de-bico) em excesso; frutas bem doces (banana, uva, manga); cerveja e bebidas destiladas adoçadas.",
+  },
+  {
+    title: "A \"gripe da keto\" nos primeiros dias",
+    body:
+      "É comum sentir cansaço, dor de cabeça, tontura ou irritação na primeira semana, enquanto o corpo se adapta e perde água e eletrólitos junto com o glicogênio. Ajuda beber bastante água e caprichar no sódio, potássio e magnésio (ex: água com uma pitada de sal, caldo de carne, folhas verdes, abacate). Costuma passar em 1 a 2 semanas.",
+  },
+  {
+    title: "Benefícios relatados",
+    body:
+      "Muita gente relata perda de gordura corporal, mais saciedade entre as refeições, menos picos de fome e energia mais estável ao longo do dia. Os resultados variam de pessoa para pessoa, e dependem também de sono, treino e consistência — não é fórmula mágica.",
+  },
+  {
+    title: "Pontos de atenção",
+    body:
+      "Vale conversar com um médico ou nutricionista antes de começar, principalmente em casos de diabetes (sobretudo tipo 1), doenças renais ou hepáticas, gravidez, amamentação, histórico de transtornos alimentares, ou uso contínuo de medicamentos. A dieta é restritiva e precisa de acompanhamento em algumas situações.",
+  },
+  {
+    title: "Dicas práticas para o dia a dia",
+    body:
+      "Leia rótulos — molhos prontos, embutidos e temperos industrializados costumam esconder açúcar e amido. Planeje as refeições com antecedência para não cair em opções fáceis com carboidrato. Prefira gorduras de qualidade em vez de frituras industrializadas. E tenha paciência: a adaptação plena costuma levar de 1 a 4 semanas.",
+  },
+];
+
+function GuideTab() {
+  const [openIndex, setOpenIndex] = useState(0);
+  return (
+    <div style={{ padding: "0 20px", maxWidth: 480, margin: "0 auto" }}>
+      <p style={{ fontFamily: FONT_BODY, color: C.muted, fontSize: 12.5, margin: "0 0 14px" }}>
+        Guia da dieta cetogênica
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+        {GUIDE_SECTIONS.map((section, i) => {
+          const open = openIndex === i;
+          return (
+            <div
+              key={section.title}
+              style={{
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderRadius: 14,
+                overflow: "hidden",
+              }}
+            >
+              <button
+                onClick={() => setOpenIndex(open ? -1 : i)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  padding: "14px 16px",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 14, fontWeight: 500 }}>
+                  {section.title}
+                </span>
+                <ChevronDown
+                  size={16}
+                  color={C.muted}
+                  style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s ease", flexShrink: 0 }}
+                />
+              </button>
+              {open && (
+                <p
+                  style={{
+                    fontFamily: FONT_BODY,
+                    color: C.muted,
+                    fontSize: 13,
+                    lineHeight: 1.55,
+                    margin: 0,
+                    padding: "0 16px 16px",
+                  }}
+                >
+                  {section.body}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p style={{ fontFamily: FONT_BODY, color: C.muted, fontSize: 11, lineHeight: 1.5, textAlign: "center", opacity: 0.8, marginBottom: 24 }}>
+        Este guia é educativo e não substitui orientação de um médico ou nutricionista.
+      </p>
     </div>
   );
 }
@@ -260,9 +371,8 @@ export default function Page() {
       if (scoreJson.error) throw new Error(scoreJson.error);
 
       const entry = { score: scoreJson.score, feedback: scoreJson.feedback };
-      setMeals((prev) => ({ ...prev, [slotKey]: entry }));
 
-      await fetch("/api/meal", {
+      const saveRes = await fetch("/api/meal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -273,8 +383,16 @@ export default function Page() {
           feedback: entry.feedback,
         }),
       });
+      const saveJson = await saveRes.json();
+      if (!saveRes.ok || saveJson.error) {
+        throw new Error(saveJson.error || "Falha ao salvar.");
+      }
+
+      // Só atualiza a tela depois de confirmar que salvou de verdade,
+      // assim a refeição nunca "aparece e some" depois.
+      setMeals((prev) => ({ ...prev, [slotKey]: entry }));
     } catch (e) {
-      setErrorMsg("Não deu para avaliar essa foto. Tente tirar outra.");
+      setErrorMsg("Não deu para salvar essa refeição. Tente novamente.");
     } finally {
       setBusySlot(null);
     }
@@ -391,7 +509,11 @@ export default function Page() {
       </div>
 
       <div style={{ display: "flex", gap: 8, padding: "0 20px 18px", justifyContent: "center" }}>
-        {[{ id: "hoje", label: "Hoje", icon: Flame }, { id: "placar", label: "Placar", icon: Trophy }].map((t) => {
+        {[
+          { id: "hoje", label: "Hoje", icon: Flame },
+          { id: "placar", label: "Placar", icon: Trophy },
+          { id: "guia", label: "Guia", icon: BookOpen },
+        ].map((t) => {
           const Icon = t.icon;
           const active = tab === t.id;
           return (
@@ -420,7 +542,9 @@ export default function Page() {
         })}
       </div>
 
-      {tab === "hoje" ? (
+      {tab === "guia" ? (
+        <GuideTab />
+      ) : tab === "hoje" ? (
         <div style={{ padding: "0 20px", maxWidth: 480, margin: "0 auto" }}>
           <div
             style={{
