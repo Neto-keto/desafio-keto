@@ -392,7 +392,7 @@ export default function Page() {
       // assim a refeição nunca "aparece e some" depois.
       setMeals((prev) => ({ ...prev, [slotKey]: entry }));
     } catch (e) {
-      setErrorMsg("Não deu para salvar essa refeição. Tente novamente.");
+      setErrorMsg(`Não deu para salvar: ${e.message || e}`);
     } finally {
       setBusySlot(null);
     }
