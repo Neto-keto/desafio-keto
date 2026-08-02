@@ -17,8 +17,7 @@ export async function GET(req) {
     if (error) throw error;
     return Response.json({ meals: data });
   } catch (e) {
-    console.error("Erro em GET /api/meal:", e);
-    return Response.json({ error: `Não foi possível carregar as refeições: ${e.message || e}` }, { status: 500 });
+    return Response.json({ error: "Não foi possível carregar as refeições." }, { status: 500 });
   }
 }
 
@@ -38,7 +37,6 @@ export async function POST(req) {
     if (error) throw error;
     return Response.json({ ok: true });
   } catch (e) {
-    console.error("Erro em POST /api/meal:", e);
-    return Response.json({ error: `Não foi possível salvar a refeição: ${e.message || e}` }, { status: 500 });
+    return Response.json({ error: "Não foi possível salvar a refeição." }, { status: 500 });
   }
 }

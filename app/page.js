@@ -18,10 +18,11 @@ const FONT_BODY = "'Inter', sans-serif";
 const FONT_MONO = "'JetBrains Mono', monospace";
 
 const SLOTS = [
-  { key: "cafe", label: "Café da manhã" },
-  { key: "almoco", label: "Almoço" },
-  { key: "lanche", label: "Lanche" },
-  { key: "jantar", label: "Jantar" },
+  { key: "refeicao1", label: "Refeição 1" },
+  { key: "refeicao2", label: "Refeição 2" },
+  { key: "refeicao3", label: "Refeição 3" },
+  { key: "refeicao4", label: "Refeição 4" },
+  { key: "refeicao5", label: "Refeição 5" },
 ];
 
 function todayKey() {
@@ -127,8 +128,10 @@ function BurnerDial({ score, size = 72 }) {
   );
 }
 
-function MealCard({ slot, entry, onCapture, busy }) {
+function MealCard({ slot, entry, pendingPhotos, busy, onAddPhoto, onClearPending, onSubmit }) {
   const inputRef = useRef(null);
+  const pendingCount = pendingPhotos ? pendingPhotos.length : 0;
+
   return (
     <div
       style={{
@@ -153,6 +156,95 @@ function MealCard({ slot, entry, onCapture, busy }) {
             {entry.feedback}
           </p>
         </div>
+      ) : pendingCount > 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+              border: `1.5px dashed ${C.border}`,
+              borderRadius: 12,
+              padding: 10,
+            }}
+          >
+            <span style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.text }}>
+              {pendingCount === 1 ? "1 foto adicionada" : `${pendingCount} fotos adicionadas`}
+            </span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.muted }}>
+              São pratos da mesma refeição
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => inputRef.current && inputRef.current.click()}
+              disabled={busy}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                background: "transparent",
+                border: `1px solid ${C.border}`,
+                borderRadius: 10,
+                color: C.muted,
+                cursor: busy ? "default" : "pointer",
+                fontFamily: FONT_BODY,
+                fontSize: 12,
+                padding: "8px 6px",
+              }}
+            >
+              <Camera size={16} color={C.muted} />
+              <span>Add. foto</span>
+            </button>
+            <button
+              onClick={() => onSubmit(slot.key)}
+              disabled={busy}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                background: busy ? "transparent" : C.ember,
+                border: `1px solid ${C.ember}`,
+                borderRadius: 10,
+                color: busy ? C.ember : C.bg,
+                cursor: busy ? "default" : "pointer",
+                fontFamily: FONT_BODY,
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "8px 6px",
+              }}
+            >
+              {busy ? (
+                <Loader2 size={16} className="animate-spin" color={C.ember} />
+              ) : (
+                <span>Avaliar</span>
+              )}
+            </button>
+          </div>
+          {!busy && (
+            <button
+              onClick={() => onClearPending(slot.key)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: C.muted,
+                fontFamily: FONT_BODY,
+                fontSize: 11,
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
       ) : (
         <button
           onClick={() => inputRef.current && inputRef.current.click()}
@@ -173,17 +265,8 @@ function MealCard({ slot, entry, onCapture, busy }) {
             fontSize: 12.5,
           }}
         >
-          {busy ? (
-            <>
-              <Loader2 size={22} className="animate-spin" color={C.ember} />
-              <span style={{ color: C.ember }}>Avaliando...</span>
-            </>
-          ) : (
-            <>
-              <Camera size={22} color={C.muted} />
-              <span>Tirar foto</span>
-            </>
-          )}
+          <Camera size={22} color={C.muted} />
+          <span>Tirar foto</span>
         </button>
       )}
 
@@ -194,7 +277,7 @@ function MealCard({ slot, entry, onCapture, busy }) {
         style={{ display: "none" }}
         onChange={(e) => {
           const file = e.target.files[0];
-          if (file) onCapture(slot.key, file);
+          if (file) onAddPhoto(slot.key, file);
           e.target.value = "";
         }}
       />
@@ -357,15 +440,35 @@ export default function Page() {
     setProfile({ nome: name });
   };
 
-  const handleCapture = async (slotKey, file) => {
+  const [pendingPhotos, setPendingPhotos] = useState({});
+
+  const addPendingPhoto = (slotKey, file) => {
+    setErrorMsg("");
+    setPendingPhotos((prev) => ({
+      ...prev,
+      [slotKey]: [...(prev[slotKey] || []), file],
+    }));
+  };
+
+  const clearPendingPhotos = (slotKey) => {
+    setPendingPhotos((prev) => {
+      const next = { ...prev };
+      delete next[slotKey];
+      return next;
+    });
+  };
+
+  const submitMeal = async (slotKey) => {
+    const files = pendingPhotos[slotKey] || [];
+    if (files.length === 0) return;
     setErrorMsg("");
     setBusySlot(slotKey);
     try {
-      const base64 = await fileToCompressedBase64(file);
+      const images = await Promise.all(files.map((f) => fileToCompressedBase64(f)));
       const scoreRes = await fetch("/api/score", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64 }),
+        body: JSON.stringify({ images }),
       });
       const scoreJson = await scoreRes.json();
       if (scoreJson.error) throw new Error(scoreJson.error);
@@ -391,8 +494,9 @@ export default function Page() {
       // Só atualiza a tela depois de confirmar que salvou de verdade,
       // assim a refeição nunca "aparece e some" depois.
       setMeals((prev) => ({ ...prev, [slotKey]: entry }));
+      clearPendingPhotos(slotKey);
     } catch (e) {
-      setErrorMsg(`Não deu para salvar: ${e.message || e}`);
+      setErrorMsg("Não deu para salvar essa refeição. Tente novamente.");
     } finally {
       setBusySlot(null);
     }
@@ -579,7 +683,16 @@ export default function Page() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             {SLOTS.map((slot) => (
-              <MealCard key={slot.key} slot={slot} entry={meals[slot.key]} busy={busySlot === slot.key} onCapture={handleCapture} />
+              <MealCard
+                key={slot.key}
+                slot={slot}
+                entry={meals[slot.key]}
+                pendingPhotos={pendingPhotos[slot.key]}
+                busy={busySlot === slot.key}
+                onAddPhoto={addPendingPhoto}
+                onClearPending={clearPendingPhotos}
+                onSubmit={submitMeal}
+              />
             ))}
           </div>
         </div>
